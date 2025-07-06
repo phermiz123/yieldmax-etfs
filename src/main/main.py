@@ -15,9 +15,7 @@ def main() -> None:
         distribution_details_path.resolve()
     )
 
-    open_market_dates_path = Path(
-        "src/resources/us_stock_market_open_days.csv"
-    )
+    open_market_dates_path = Path("src/resources/us_stock_market_open_days.csv")
     open_market_dates = CSVUtil.load_open_market_dates(open_market_dates_path.resolve())
 
     stock_calculator_service = StockCalculatorService(
@@ -37,8 +35,6 @@ def main() -> None:
         file_path="src/resources/stock_calculations.csv",
         stock_calculations=stock_calculations,
     )
-
-
 
 
 if __name__ == "__main__":

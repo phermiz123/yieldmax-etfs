@@ -7,7 +7,6 @@ import os
 import time
 
 
-
 class StockCalculatorService:
     def __init__(self, ticker: str, distributions: list, market_open_dates: dict):
         self.ticker = ticker
@@ -24,43 +23,62 @@ class StockCalculatorService:
         """
         Calculate the percentage difference between the closing prices on the declared and payable dates.
         """
-        # Placeholder for actual API calls to get closing prices
-
-        response_declared = self.get_daily_open_close_agg(
-            ticker=self.ticker, date=detail.declared_date
-        )
-
-
         day_after_payable_date = self.market_open_dates.get(detail.payable_date, None)
 
         if day_after_payable_date is None:
             raise LookupError(f"No market open date found for {detail.payable_date}")
 
-        response_after_payable = self.get_daily_open_close_agg(
-            ticker=self.ticker, date=day_after_payable_date
+        response = self.list_aggs(
+            start_date=detail.declared_date, end_date=day_after_payable_date
         )
 
-        percentage_change = (
-            (response_after_payable.close - response_declared.close)
-            / response_declared.close
+
+        if len(response) < 3:
+            raise ValueError(
+                f"Expected at least 3 results, got {len(response)} for {self.ticker}"
+                f"between {detail.declared_date} and {day_after_payable_date}"
+            )
+
+        closing_price_declared = response[0].close
+        closing_price_payable = response[-2].close
+        closing_price_after_payable = response[-1].close
+
+        percentage_change_payable = (
+            (closing_price_payable - closing_price_declared) / closing_price_declared
+        ) * 100
+
+        percentage_change_after_payable = (
+            (closing_price_after_payable - closing_price_declared)
+            / closing_price_declared
         ) * 100
 
         return StockCalculation(
             declared_date=detail.declared_date,
             payable_date=detail.payable_date,
-            closing_price_declared=response_declared.close,
-            closing_price_payable=response_after_payable.close,
-            percentage_change=percentage_change,
+            after_payable_date=day_after_payable_date,
+            closing_price_declared=closing_price_declared,
+            closing_price_payable=closing_price_payable,
+            closing_price_after_payable=closing_price_after_payable,
+            percentage_change_payable=percentage_change_payable,
+            percentage_change_after_payable=percentage_change_after_payable,
         )
-    
-    def get_daily_open_close_agg(
-        self, ticker: str, date: str
-    ):
+
+    def list_aggs(self, start_date: str, end_date: str) -> list:
         """
         Get the daily open and close aggregate for a given ticker and date.
         """
-        print(f"Fetching data for {ticker} on {date}")
-        response = self.client.get_daily_open_close_agg(ticker=ticker, date=date)
+        print(f"Fetching data for {self.ticker} on {start_date} to {end_date}")
+        response = []
+        for a in self.client.list_aggs(
+            ticker=self.ticker,
+            multiplier=1,
+            timespan="day",
+            from_=start_date,
+            to=end_date,
+            adjusted=True,
+            sort="asc",
+            limit=120,
+        ):
+            response.append(a)
         time.sleep(12)  # Sleep to avoid hitting API rate limits
         return response
-        

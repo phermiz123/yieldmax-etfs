@@ -68,13 +68,7 @@ class CSVUtil:
         :param stock_calculations: List of stock calculations to write.
         """
         with open(file_path, mode="w", encoding="utf-8", newline="") as csvfile:
-            fieldnames = [
-                "declared_date",
-                "payable_date",
-                "closing_price_declared",
-                "closing_price_payable",
-                "percentage_change",
-            ]
+            fieldnames = asdict(stock_calculations[0]).keys()
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
             writer.writeheader()
