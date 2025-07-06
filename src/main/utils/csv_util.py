@@ -4,6 +4,8 @@ import pandas as pd
 from src.main.model.distribution_detail import DistributionDetail
 from src.main.model.stock_calcuation import StockCalculation
 
+from dataclasses import asdict
+
 
 class CSVUtil:
     """
@@ -67,17 +69,17 @@ class CSVUtil:
         """
         with open(file_path, mode="w", encoding="utf-8", newline="") as csvfile:
             fieldnames = [
-                "Declared-Date",
-                "Payable-Date",
-                "Closing-Price-Declared",
-                "Closing-Price-Payable",
-                "Percentage-Change",
+                "declared_date",
+                "payable_date",
+                "closing_price_declared",
+                "closing_price_payable",
+                "percentage_change",
             ]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
             writer.writeheader()
             for calculation in stock_calculations:
-                writer.writerow(calculation.to_dict())
+                writer.writerow(asdict(calculation))
 
     @staticmethod
     def transform_date(date_str: str) -> str:

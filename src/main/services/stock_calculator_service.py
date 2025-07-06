@@ -4,6 +4,8 @@ from src.main.model.stock_calcuation import StockCalculation
 from polygon import RESTClient
 
 import os
+import time
+
 
 
 class StockCalculatorService:
@@ -24,16 +26,17 @@ class StockCalculatorService:
         """
         # Placeholder for actual API calls to get closing prices
 
-        response_declared = self.client.get_daily_open_close_agg(
+        response_declared = self.get_daily_open_close_agg(
             ticker=self.ticker, date=detail.declared_date
         )
+
 
         day_after_payable_date = self.market_open_dates.get(detail.payable_date, None)
 
         if day_after_payable_date is None:
             raise LookupError(f"No market open date found for {detail.payable_date}")
 
-        response_after_payable = self.client.get_daily_open_close_agg(
+        response_after_payable = self.get_daily_open_close_agg(
             ticker=self.ticker, date=day_after_payable_date
         )
 
@@ -47,5 +50,17 @@ class StockCalculatorService:
             payable_date=detail.payable_date,
             closing_price_declared=response_declared.close,
             closing_price_payable=response_after_payable.close,
-            percentage_difference=percentage_change,
+            percentage_change=percentage_change,
         )
+    
+    def get_daily_open_close_agg(
+        self, ticker: str, date: str
+    ):
+        """
+        Get the daily open and close aggregate for a given ticker and date.
+        """
+        print(f"Fetching data for {ticker} on {date}")
+        response = self.client.get_daily_open_close_agg(ticker=ticker, date=date)
+        time.sleep(12)  # Sleep to avoid hitting API rate limits
+        return response
+        
